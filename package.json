@@ -18,6 +18,10 @@
 			{
 				"command": "vscode-extension-demo.helloWorld",
 				"title": "Hello World"
+			},
+			{
+				"command": "vscode-extension-demo.test",
+				"title": "My Test"
 			}
 		]
 	},
