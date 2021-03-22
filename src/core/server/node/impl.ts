@@ -9,6 +9,8 @@ import { TsServerProcessKind } from "../src/tsServer/server";
 import { TypeScriptServiceConfiguration } from "../src/utils/configuration";
 import { notNullish } from "../../../utils/assertions";
 import { TSServerStdoutReader } from "./stdout-reader";
+import { logger } from "../../../utils/debugger";
+import { EventEmitter } from "events";
 const projectBase =
   "C:\\Users\\DarrenDanielDay\\Documents\\School\\paper\\vscode-extension-demo";
 interface PendingRequestItem {
@@ -41,6 +43,10 @@ export class MyTypeScriptServer {
   childProcess?: child_process.ChildProcess;
   tsserver?: string;
   reader: TSServerStdoutReader = new TSServerStdoutReader();
+  /**
+   * Emitter for tsserve's events.
+   */
+  eventEmitter = new EventEmitter();
   pendingRequests: Map<number, PendingRequestItem> = new Map<
     number,
     PendingRequestItem
@@ -64,22 +70,20 @@ export class MyTypeScriptServer {
     const stdout = this.childProcess.stdout!;
     this.reader.onResponse((response) => {
       const item = this.pendingRequests.get(response.request_seq);
+      this.pendingRequests.delete(response.request_seq);
       notNullish(item);
       const { resolve, reject } = item;
-      response.success ? resolve(response) : reject(response);
+      response.success ? resolve(response) : reject(response.message);
+    });
+    this.reader.onEvent((event) => {
+      this.eventEmitter.emit(event.event, event)
     });
     stdout.on("data", (chunk: Buffer) => {
       const rawResponse = chunk.toString("utf-8");
-      console.log(`*`.repeat(100));
-      console.log(rawResponse);
-      fs.writeFileSync(
-        path.resolve(projectBase, "tsserver-output.txt"),
-        rawResponse,
-        { flag: "a" }
-      );
-      console.log(`-`.repeat(100));
+      logger.block("TS Server Data", rawResponse);
       this.resolveChunk(chunk);
     });
+    return this;
   }
 
   private resolveChunk(chunk: Buffer) {
@@ -111,10 +115,10 @@ export class MyTypeScriptServer {
       ) {
         setTimeout(() => {
           resolve(null);
-        }, 0)
+        }, 0);
       }
       this.pendingRequests.set(nextSeq, { seq: nextSeq, resolve, reject });
-      childProcess!.stdin!.write(
+      const requestPayload =
         JSON.stringify(
           withType<protocol.Request>({
             seq: nextSeq,
@@ -122,8 +126,9 @@ export class MyTypeScriptServer {
             command,
             arguments: request,
           })
-        ) + "\r\n"
-      );
+        ) + "\r\n";
+      childProcess!.stdin!.write(requestPayload);
+      logger.block("Request Payload", requestPayload);
     });
   }
 }

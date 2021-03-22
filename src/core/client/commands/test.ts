@@ -1,22 +1,40 @@
-import { MyTypeScriptServer } from "../../server/node/impl";
-import * as path from "path";
-let opened = false;
-const testProjectHome = "E:\\Coding\\Playground\\ts-playground\\";
-export async function test() {
-  const { instance } = MyTypeScriptServer;
-  if (!opened) {
-    await instance.execute("open", {
-      file: path.join(testProjectHome, "tsconfig.json"),
-      projectRootPath: testProjectHome,
-    });
-    await instance.execute("open", {file: path.join(testProjectHome, "0.ts"), projectRootPath: testProjectHome})
-    opened = true;
+import {
+  absolutePath,
+} from "../../../utils/paths";
+import * as vscode from "vscode";
+import { ProjectLoader } from "../../analyser/loader";
+export async function test(context: vscode.ExtensionContext) {
+  const editor = vscode.window.activeTextEditor;
+  const section = editor?.selection;
+  let filename = editor?.document.fileName;
+  if (section && filename) {
+    filename = absolutePath(filename);
+    const loader = new ProjectLoader();
+    const instance = loader.server;
+    // const tsconfigPath = path.join(projectRoot()!, "tsconfig.json");
+    await loader.load(projectRoot());
+    // await instance.execute("open", {
+    //   file: tsconfigPath,
+    //   projectRootPath: projectRoot(),
+    // });
+    // await instance.execute("open", {
+    //   file: filename,
+    //   projectRootPath: projectRoot(),
+    // })
+    const data = {
+      line: section.start.line + 1,
+      offset: section.start.character + 1,
+      file: filename,
+      projectFileName: loader.loadedProjectName,
+    };
+    const { body } = await instance.execute("references", data);
+    const refs = body!;
+    for (const ref of refs!.refs) {
+      console.log(ref);
+    }
   }
-  const response = await instance.execute("definition", {
-    file: path.resolve(testProjectHome, `1.ts`),
-    line: 4,
-    offset: 10,
-    projectFileName: testProjectHome,
-  });
-  return response
+}
+
+function projectRoot(): string {
+  return absolutePath(vscode.workspace.workspaceFolders![0].uri.fsPath);
 }

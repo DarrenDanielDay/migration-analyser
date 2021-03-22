@@ -1,11 +1,14 @@
 import * as vscode from "vscode";
+import { logger } from "../../../utils/debugger";
+import { demo } from "./demo";
 import { onHelloWorld } from "./find-reference";
 import { test } from "./test";
 
 export class MyCommandManager {
-  readonly commands: [string, () => void][] = [
+  readonly commands: [string, (context: vscode.ExtensionContext) => any][] = [
     ["helloWorld", onHelloWorld],
     ["test", test],
+    ["demo", demo]
   ];
 
   registerAll(context: vscode.ExtensionContext) {
@@ -15,12 +18,12 @@ export class MyCommandManager {
       }
       const disposable = vscode.commands.registerCommand(command, async () => {
         try {
-          const result = handler() as any
+          const result = handler(context)
           if (result instanceof Promise) {
             await result
           }
         } catch (e) {
-          console.error(e);
+          logger.block(`Execute '${command}' Failed`, e)
         }
       });
       context.subscriptions.push(disposable);

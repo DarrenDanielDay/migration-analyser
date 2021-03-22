@@ -5,6 +5,7 @@ import { MyCommandManager } from "./core/client";
 import { onHelloWorld } from "./core/client/commands/find-reference";
 import { TypeScriptServer } from "./core/server";
 import { MyTypeScriptServer } from "./core/server/node/impl";
+import { logger } from "./utils/debugger";
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -22,7 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
     const manager = new MyCommandManager();
     manager.registerAll(context);
   } catch (error) {
-    console.log(error)
+    logger.block("Register Command", error)
   }
 }
 

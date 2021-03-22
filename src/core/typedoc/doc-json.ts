@@ -1,0 +1,33 @@
+import { readFileSync } from "fs";
+import { basename, dirname, join, resolve } from "path";
+import * as typedoc from "typedoc";
+import { SerializeEventData } from "typedoc/dist/lib/serialization/events";
+import { projectBase, projectCacheDir } from "../../utils/paths";
+
+export async function geneTypeDoc(packageName: string) {
+  const typeDeclPath = resolve(
+    projectBase,
+    "node_modules",
+    "@types",
+    packageName
+  );
+  const entryPoints: string[] = [typeDeclPath];
+  const app = new typedoc.Application();
+  app.options.addReader(new typedoc.TSConfigReader());
+  app.options.addReader(new typedoc.TypeDocReader());
+  app.bootstrap({
+    entryPoints,
+  });
+  const outDir = join(projectCacheDir, packageName);
+  const jsonFileName =  `${packageName}.json`;
+  const jsonFilePath = join(outDir, jsonFileName);
+  const project = app.convert();
+  if (project) {
+    // await app.generateDocs(project, outDir);
+    await app.generateJson(project, jsonFilePath);
+    const content = readFileSync(jsonFilePath).toString("utf-8");
+    return JSON.parse(content) as typedoc.ProjectReflection;
+  } else {
+    throw new Error("Failed to convert project.");
+  }
+}
