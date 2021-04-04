@@ -5,7 +5,7 @@ export interface IVersion {
   readonly minor: number;
   readonly patch: number;
 }
- 
+
 export interface IVersionComparator {
   lt(version: IVersion): boolean;
   gt(version: IVersion): boolean;
@@ -27,7 +27,10 @@ export class Version implements IVersion, IVersionComparator {
   }
 
   static parse(versionString: string) {
-    const versions: number[] = versionString.split(/\D+/).filter(s => !!s).map(num => +num);
+    const versions: number[] = versionString
+      .split(/\D+/)
+      .filter((s) => !!s)
+      .map((num) => +num);
     if (!versions.length) versions.push(0);
     return new Version(...versions);
   }

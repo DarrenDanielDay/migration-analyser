@@ -19,7 +19,7 @@ export async function geneTypeDoc(packageName: string) {
     entryPoints,
   });
   const outDir = join(projectCacheDir, packageName);
-  const jsonFileName =  `${packageName}.json`;
+  const jsonFileName = `${packageName}.json`;
   const jsonFilePath = join(outDir, jsonFileName);
   const project = app.convert();
   if (project) {

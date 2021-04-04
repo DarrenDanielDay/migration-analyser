@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-
+import "../controller";
 export class WebviewManager {
   panel: vscode.WebviewPanel | undefined;
   public messageHandler?: Parameters<vscode.Webview["onDidReceiveMessage"]>[0];
   private static _instance?: WebviewManager;
   static get instance() {
-    return this._instance ??= new WebviewManager()
+    return (this._instance ??= new WebviewManager());
   }
   private constructor() {}
   open(context: vscode.ExtensionContext) {
@@ -41,7 +41,7 @@ export class WebviewManager {
         path.join(context.extensionPath, "src\\ui\\react-ui\\index.html")
       )
       .toString("utf-8")
-      .replace("%HASH%", +new Date()+"")
+      .replace("%HASH%", +new Date() + "")
       .replace(
         "%INDEX_JS%",
         urlOfFile(this.panel, context, "src\\ui\\react-ui\\dist\\src\\index.js")

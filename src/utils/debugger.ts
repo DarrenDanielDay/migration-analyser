@@ -46,7 +46,6 @@ ${this.middle(`<${title}> End`, 100, "-")}`);
   }
 }
 
-
 const logger = new Logger();
 
-export {logger}
+export { logger };

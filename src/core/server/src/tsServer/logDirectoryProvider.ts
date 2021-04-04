@@ -4,11 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 export interface ILogDirectoryProvider {
-	getNewLogDirectory(): string | undefined;
+  getNewLogDirectory(): string | undefined;
 }
 
-export const noopLogDirectoryProvider = new class implements ILogDirectoryProvider {
-	public getNewLogDirectory(): undefined {
-		return undefined;
-	}
-};
+export const noopLogDirectoryProvider = new (class
+  implements ILogDirectoryProvider {
+  public getNewLogDirectory(): undefined {
+    return undefined;
+  }
+})();

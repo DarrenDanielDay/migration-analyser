@@ -1,6 +1,4 @@
-import {
-  absolutePath,
-} from "../../../utils/paths";
+import { absolutePath } from "../../../utils/paths";
 import * as vscode from "vscode";
 import { ProjectLoader } from "../../analyser/project-loader";
 export async function test(context: vscode.ExtensionContext) {

@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import * as vscode from 'vscode'
+import * as vscode from "vscode";
 
 import protocol = require("typescript/lib/protocol");
 import { MyTypeScriptServer } from "../server/node";
@@ -32,7 +32,7 @@ export class ProjectLoader {
                 "projectLoadingFinish",
                 loadEndHandler
               );
-              this.loadedProjectName = tsconfigPath
+              this.loadedProjectName = tsconfigPath;
               resolve();
             }
           };

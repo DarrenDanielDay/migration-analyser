@@ -7,7 +7,7 @@ export async function onHelloWorld() {
     const response = await TypeScriptServer.client.execute(
       "open",
       withType<ts.OpenRequestArgs>({
-        file: `C:\\Users\\DarrenDanielDay\\Documents\\School\\paper\\vscode-extension-demo\\src\\extension.ts`,
+        file: `C:\\Users\\DarrenDanielDay\\Documents\\School\\paper\\package-migration-analyzer-extension\\src\\extension.ts`,
       }),
       {
         isCancellationRequested: false,

@@ -1,1 +1,1 @@
-export type PickKey<T extends object, K extends keyof T> = K
+export type PickKey<T extends object, K extends keyof T> = K;

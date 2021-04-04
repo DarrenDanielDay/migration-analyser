@@ -11,7 +11,10 @@ export const App: React.FC = () => {
       >
         use react hooks! count = {count}
       </button>
-      <p>Don't worry if the following shows "error". The error message will come out randomly by design.</p>
+      <p>
+        Don't worry if the following shows "error". The error message will come
+        out randomly by design.
+      </p>
       <p>{message}</p>
       <button
         onClick={async () => {

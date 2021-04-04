@@ -12,7 +12,7 @@ import { TSServerStdoutReader } from "./stdout-reader";
 import { logger } from "../../../utils/debugger";
 import { EventEmitter } from "events";
 const projectBase =
-  "C:\\Users\\DarrenDanielDay\\Documents\\School\\paper\\vscode-extension-demo";
+  "C:\\Users\\DarrenDanielDay\\Documents\\School\\paper\\package-migration-analyzer-extension";
 interface PendingRequestItem {
   resolve: (data: any) => void;
   reject: (reason?: any) => void;
@@ -76,7 +76,7 @@ export class MyTypeScriptServer {
       response.success ? resolve(response) : reject(response.message);
     });
     this.reader.onEvent((event) => {
-      this.eventEmitter.emit(event.event, event)
+      this.eventEmitter.emit(event.event, event);
     });
     stdout.on("data", (chunk: Buffer) => {
       const rawResponse = chunk.toString("utf-8");
