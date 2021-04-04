@@ -1,9 +1,14 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as vscode from 'vscode'
+
 import protocol = require("typescript/lib/protocol");
 import { MyTypeScriptServer } from "../server/node";
 
 export class ProjectLoader {
+  dispose() {
+    this.server.stop();
+  }
   server = new MyTypeScriptServer().start();
   loadedProjectName?: string;
   load(projectFolder: string) {

@@ -1,11 +1,11 @@
-import { resolve } from "path";
+import * as path from "path";
 import * as fs from "fs";
-import { capitalize } from "lodash";
 import { title } from "./string";
+const resolve = path.resolve;
 export const testProjectHome = "E:\\Coding\\Playground\\ts-playground\\";
 const projectBase = resolve(__dirname, "../../");
 const projectCacheDir = resolve(projectBase, "out/cache");
-const scriptDir = resolve(projectBase, "scripts")
+// const scriptDir = resolve(projectBase, "scripts")
 if (!fs.existsSync(projectCacheDir)) fs.mkdirSync(projectCacheDir);
 export function absolutePath(path: string) {
     return normalizeDrive(resolve(path));
@@ -14,5 +14,5 @@ export function absolutePath(path: string) {
 function normalizeDrive(path: string) {
     return /^\w:/.test(path) ? title(path) : path
 }
-
+export { path, fs }
 export { projectBase, projectCacheDir };

@@ -3,12 +3,17 @@ import { logger } from "../../../utils/debugger";
 import { demo } from "./demo";
 import { onHelloWorld } from "./find-reference";
 import { test } from "./test";
-
+// import { open, reload } from "./ui";
+import { WebviewManager } from "../../../ui/react-ui/extension-handler";
+ const webviewManager = WebviewManager.instance
 export class MyCommandManager {
   readonly commands: [string, (context: vscode.ExtensionContext) => any][] = [
     ["helloWorld", onHelloWorld],
     ["test", test],
-    ["demo", demo]
+    ["demo", demo],
+    ["reload-ui", webviewManager.reload.bind(webviewManager)],
+    ["open-ui", webviewManager.open.bind(webviewManager)],
+    ["close-ui", webviewManager.close.bind(webviewManager)],
   ];
 
   registerAll(context: vscode.ExtensionContext) {
@@ -18,12 +23,12 @@ export class MyCommandManager {
       }
       const disposable = vscode.commands.registerCommand(command, async () => {
         try {
-          const result = handler(context)
+          const result = handler(context);
           if (result instanceof Promise) {
-            await result
+            await result;
           }
         } catch (e) {
-          logger.block(`Execute '${command}' Failed`, e)
+          logger.block(`Execute '${command}' Failed`, e);
         }
       });
       context.subscriptions.push(disposable);

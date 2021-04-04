@@ -11,9 +11,11 @@
 		"rootDir": "src",
 		"strict": true,
 		"experimentalDecorators": true,
+		"jsx": "react"
 	},
 	"exclude": [
 		"node_modules",
-		".vscode-test"
+		".vscode-test",
+		"ui/react-ui/src"
 	]
 }

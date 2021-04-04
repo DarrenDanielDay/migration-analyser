@@ -2,7 +2,7 @@ import {
   absolutePath,
 } from "../../../utils/paths";
 import * as vscode from "vscode";
-import { ProjectLoader } from "../../analyser/loader";
+import { ProjectLoader } from "../../analyser/project-loader";
 export async function test(context: vscode.ExtensionContext) {
   const editor = vscode.window.activeTextEditor;
   const section = editor?.selection;
@@ -11,16 +11,7 @@ export async function test(context: vscode.ExtensionContext) {
     filename = absolutePath(filename);
     const loader = new ProjectLoader();
     const instance = loader.server;
-    // const tsconfigPath = path.join(projectRoot()!, "tsconfig.json");
     await loader.load(projectRoot());
-    // await instance.execute("open", {
-    //   file: tsconfigPath,
-    //   projectRootPath: projectRoot(),
-    // });
-    // await instance.execute("open", {
-    //   file: filename,
-    //   projectRootPath: projectRoot(),
-    // })
     const data = {
       line: section.start.line + 1,
       offset: section.start.character + 1,
@@ -32,6 +23,7 @@ export async function test(context: vscode.ExtensionContext) {
     for (const ref of refs!.refs) {
       console.log(ref);
     }
+    loader.dispose();
   }
 }
 

@@ -10,7 +10,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:vscode-extension-demo.helloWorld"
+		"*"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -26,6 +26,18 @@
 			{
 				"command": "vscode-extension-demo.demo",
 				"title": "Reference Demo"
+			},
+			{
+				"command": "vscode-extension-demo.open-ui",
+				"title": "Open UI"
+			},
+			{
+				"command": "vscode-extension-demo.reload-ui",
+				"title": "Reload UI"
+			},
+			{
+				"command": "vscode-extension-demo.close-ui",
+				"title": "Close UI"
 			}
 		]
 	},
@@ -33,10 +45,10 @@
 		"vscode:prepublish": "yarn run compile",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
-		"pretest": "yarn run compile && yarn run lint",
 		"lint": "eslint src --ext ts",
 		"lint:types": "tsc --noEmit",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTest.js",
+		"play": "ts-node --files ./playground.ts"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.3",
@@ -48,6 +60,7 @@
 		"eslint": "^7.19.0",
 		"glob": "^7.1.6",
 		"mocha": "^8.2.1",
+		"ts-node": "^9.1.1",
 		"typescript": "^4.1.3",
 		"vscode-test": "^1.5.0"
 	},
@@ -56,8 +69,10 @@
 		"@types/lodash": "^4.14.168",
 		"@types/rimraf": "^3.0.0",
 		"@types/semver": "^7.3.4",
+		"jquery": "^3.6.0",
 		"jsonc-parser": "^3.0.0",
 		"lodash": "^4.17.21",
+		"package-json": "^6.5.0",
 		"rimraf": "^3.0.2",
 		"semver": "^7.3.4",
 		"typedoc": "^0.20.32",
