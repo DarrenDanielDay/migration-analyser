@@ -1,7 +1,6 @@
 import { readFileSync } from "fs";
-import { basename, dirname, join, resolve } from "path";
+import { join, resolve } from "path";
 import * as typedoc from "typedoc";
-import { SerializeEventData } from "typedoc/dist/lib/serialization/events";
 import { projectBase, projectCacheDir } from "../../utils/paths";
 
 export async function geneTypeDoc(packageName: string) {

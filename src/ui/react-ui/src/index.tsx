@@ -16,4 +16,6 @@ window.extensionAPI = new Proxy(
     },
   }
 ) as never;
+window.useState = React.useState;
+window.useEffect = React.useEffect;
 ReactDOM.render(<App></App>, document.getElementById("app"));

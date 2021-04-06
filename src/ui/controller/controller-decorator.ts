@@ -5,11 +5,16 @@ import {
   Response,
   UIRequestExtensionProtocol,
 } from "../react-ui/message-protocol";
+import * as vscode from 'vscode'
 
 export class ControllerManager {
   private static _instance: ControllerManager | undefined;
   static get instance() {
     return (this._instance ??= new ControllerManager());
+  }
+  static context: vscode.ExtensionContext
+  static init(context: vscode.ExtensionContext) {
+    this.context = context;
   }
   static toJSON<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
@@ -96,4 +101,16 @@ export const Inject = {
     };
     return decorator;
   },
+  context(): PropertyDecorator {
+    const decorator: PropertyDecorator = (target, key) => {
+      const desctiptor: PropertyDescriptor = {
+        get() {
+          const value = ControllerManager.context;
+          return value;
+        },
+      };
+      Object.defineProperty(target, key, desctiptor);
+    };
+    return decorator;
+  }
 };

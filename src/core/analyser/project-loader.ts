@@ -6,6 +6,10 @@ import protocol = require("typescript/lib/protocol");
 import { MyTypeScriptServer } from "../server/node";
 
 export class ProjectLoader {
+  private static _instance?: ProjectLoader;
+  static get instance() {
+    return this._instance ?? new ProjectLoader();
+  }
   dispose() {
     this.server.stop();
   }

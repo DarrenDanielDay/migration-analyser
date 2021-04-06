@@ -1,4 +1,4 @@
-import packageJson = require("package-json");
+import packageJson from "package-json";
 import { fs, path } from "../../utils/paths";
 import { Version } from "./version";
 
