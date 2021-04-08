@@ -32,8 +32,20 @@ export class Version implements IVersion, IVersionComparator {
   }
 
   static parse(versionString: string) {
-    const ver = new SemVer(versionString, {includePrerelease: true});
-    return new Version(ver.major, ver.minor, ver.patch, ver.prerelease.join("."));
+    const versions: number[] = versionString
+      .split(/\D+/)
+      .filter((s) => !!s)
+      .map((num) => +num);
+    if (!versions.length) versions.push(0);
+    return new Version(...versions);
+  }
+
+  static stringify(version: IVersion): string {
+    return `${version.major}.${version.minor}.${version.patch}${version.preview ? `-${version.preview}` : ''}`
+  }
+
+  static normalize(versionString: string): string {
+      return Version.stringify(Version.parse(versionString));
   }
 
   lt(version: IVersion): boolean {

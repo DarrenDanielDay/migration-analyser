@@ -1,27 +1,37 @@
 import { isString } from "lodash";
+import { DeclarationReflection, Reflection } from "typedoc";
 import { assertIsNumber } from "../../utils";
-import { fs, path, extensionCacheDir } from "../../utils/paths";
+import { fs, path, extensionCacheDir, extensionBase } from "../../utils/paths";
 import { isNullish, isPrimitive } from "../../utils/type-guards";
 
 export interface TypedocSource {
   fileName: string;
+  /**
+   * 1..*
+   */
   line: number;
+  /**
+   * 0..*
+   */
   character: number;
 }
 
 export interface FunctionAPI {
-  dtsSource: TypedocSource;
+  dtsSource?: TypedocSource;
   accessPath: string[];
   name: string;
   sinceVersion?: string;
   deprecatedVersion?: string;
+  deprecationDetailed?: string;
 }
 
 export class TypeDocJSONLoader {
   json: any;
   apis: FunctionAPI[] = [];
-  objectMapping = new Map<number, any>();
-  constructor(public readonly packageName: string) {}
+  objectMapping = new Map<number, Reflection>();
+  constructor(public readonly packageName: string) {
+    this.load().loadObjectIds().loadFunctionAPIs();
+  }
   load() {
     this.json = JSON.parse(
       fs
@@ -75,7 +85,7 @@ export class TypeDocJSONLoader {
 
   loadFunctionAPIs() {
     const functionAPIPaths = [];
-    const functionTypes = ["Call signature", "Method"];
+    const functionTypes = ["Method"];
     const iterator = this.dfs([], this.json);
     let iteration = iterator.next(true);
     while (!iteration.done) {
@@ -88,6 +98,7 @@ export class TypeDocJSONLoader {
             !this.getNameOf(path).includes("__type")
           ) {
             functionAPIPaths.push(path);
+            this.apis.push(this.makeFunctionAPI(path, node));
             iteration = iterator.next(false);
           } else {
             iteration = iterator.next(true);
@@ -97,11 +108,6 @@ export class TypeDocJSONLoader {
       }
       iteration = iterator.next(true);
     }
-    console.log(functionAPIPaths);
-    
-    console.log(functionAPIPaths.map(v => {
-      return this.getSource(v);
-    }))
     return functionAPIPaths.map((path) => {
       return this.getNameOf(path);
     });
@@ -119,13 +125,46 @@ export class TypeDocJSONLoader {
     return node?.sources;
   }
 
-  // @ts-ignore
-  private makeFunctionAPI(path: string[], node: any): FunctionAPI {
-    // return {
-    //   name: this.getNameOf(path),
-    //   accessPath: path,
-    //   dtsSource
-    // }
+  private getVersionFromTag(node: DeclarationReflection, tagName: string): [string| undefined, string | undefined] {
+    for (const signature of node.signatures || []) {
+      for (const tag of signature.comment?.tags || []) {
+        // @ts-expect-error
+        if (tag.tag === tagName) {
+          const text = tag.text;
+          const versionLikes: string[] = [];
+          const reg = /([0-9]+(\.[0-9]+)+)/g;
+          let match;
+          while ((match = reg.exec(text)) !== null) {
+            versionLikes.push(match[0]);
+          }
+          return [versionLikes[0], text]
+        }
+      }
+    }
+    return [undefined, undefined]
+  }
+
+  private makeFunctionAPI(
+    path: string[],
+    node: DeclarationReflection
+  ): FunctionAPI {
+    const [deprecated, deprecatedFull] = this.getVersionFromTag(node, "deprecated");
+    const [since] = this.getVersionFromTag(node, "since");
+
+    const relativeSource = this.getSource(path)?.find(() => true)!;
+    return {
+      name: this.getNameOf(path),
+      accessPath: path,
+      // @ts-ignore
+      dtsSource:
+        SourceLocator.locate(
+          relativeSource,
+          node.name
+        ),
+      deprecatedVersion: deprecated,
+      deprecationDetailed: deprecatedFull,
+      sinceVersion: since,
+    };
   }
 
   private getNameOf(path: string[]) {
@@ -142,5 +181,81 @@ export class TypeDocJSONLoader {
       }
     }
     return namePath.join(".");
+  }
+}
+
+class SourceLocator {
+  static locate(startPosition: TypedocSource, symbol: string) {
+    // TODO use ast to find symbol
+    const fileContent = fs
+      .readFileSync(path.resolve(extensionBase, 'node_modules', startPosition.fileName))
+      .toString("utf-8");
+    const space = `\\s*`;
+    const skip = `.*`
+    const multilineStart = '/\\*'
+    const multilineEnd = '\\*/';
+    const singlelineStart = '//';
+    // const pattern = new RegExp(`${symbol}${space}\\??${space}\\(`, 'g');
+    const pattern = new RegExp(`(?<!(${space}${multilineStart}${skip})|(${space}${singlelineStart}${space}))${symbol}\\??\\((?!${skip}${multilineEnd}${space})`, 'g');
+    const results = [];
+    let result;
+    const offset = this.findIndex(fileContent, startPosition);
+    const searchText = fileContent.slice(offset);
+    while ((result = pattern.exec(searchText)) != null) {
+      results.push(result);
+    }
+    const matched = results[0];
+    return this.findLocation(
+      fileContent,
+      offset + matched?.index + 1,
+      startPosition.fileName
+    );
+  }
+
+  static findIndex(content: string, position: TypedocSource) {
+    const { line, character } = position;
+    let lineNo = 1;
+    let columnNo = 0;
+    for (let i = 0; i < content.length; i++) {
+      const char = content[i];
+      if (line === lineNo && columnNo === character) {
+        return i;
+      }
+      if (char === "\n") {
+        lineNo++;
+        columnNo = 0;
+      } else {
+        columnNo++;
+      }
+    }
+    throw new Error(
+      `cannot find index of line ${line} character ${character} in given content`
+    );
+  }
+
+  static findLocation(
+    content: string,
+    index: number,
+    fileName: string
+  ): TypedocSource | undefined {
+    if (isNaN(index)) {
+      return undefined;
+    }
+    let lineNo = 1;
+    let columnNo = 0;
+    let i;
+    for (i = 0; i <= index; i++) {
+      if (content[i] === "\n") {
+        lineNo++;
+        columnNo = 0;
+      } else {
+        columnNo++;
+      }
+    }
+    return {
+      line: lineNo,
+      character: columnNo,
+      fileName,
+    };
   }
 }

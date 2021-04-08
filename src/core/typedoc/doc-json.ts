@@ -1,6 +1,7 @@
 import { readFileSync } from "fs";
 import { join, resolve } from "path";
 import * as typedoc from "typedoc";
+import { ensureDirectoriesExist } from "typedoc/dist/lib/utils";
 import { extensionBase, extensionCacheDir } from "../../utils/paths";
 
 export async function geneTypeDoc(packageName: string) {
@@ -18,6 +19,7 @@ export async function geneTypeDoc(packageName: string) {
     entryPoints,
   });
   const outDir = join(extensionCacheDir, packageName);
+  ensureDirectoriesExist(outDir);
   const jsonFileName = `${packageName}.json`;
   const jsonFilePath = join(outDir, jsonFileName);
   const project = app.convert();

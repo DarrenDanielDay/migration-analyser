@@ -7,11 +7,18 @@ import * as vscode from "vscode";
 import { Controller, Inject } from "./controller-decorator";
 import { ProjectLoader } from "../../core/analyser/project-loader";
 import { PackageDetector, PackageJSON } from "../../core/analyser/package";
-import { IVersion } from "../../core/analyser/version";
+import { IVersion, Version } from "../../core/analyser/version";
 import { dieMessage } from "../../utils/message";
-import { absolutePath, extensionBase } from "../../utils/paths";
+import { absolutePath, extensionBase, path } from "../../utils/paths";
 import { DTSInstaller } from "../../core/analyser/dts-installer";
 import { TypedocJSONGenerator } from "../../core/typedoc/json-generator";
+import {
+  FunctionAPI,
+  TypeDocJSONLoader,
+  TypedocSource,
+} from "../../core/typedoc/json-loader";
+import * as semver from "semver";
+import { normalizePath } from "typedoc";
 
 @Controller
 export class DemoController implements UIRequestController {
@@ -21,6 +28,10 @@ export class DemoController implements UIRequestController {
   private readonly channel!: vscode.OutputChannel;
   @Inject.context()
   private readonly context!: vscode.ExtensionContext;
+  @Inject.singleTone(() => {
+    return new Map<string, TypeDocJSONLoader>();
+  })
+  private readonly loaderCache!: Map<string, TypeDocJSONLoader>;
   async logInput(params: string) {
     // Suppose sometimes methods of controller crashed:
     if (Math.random() < 0.5) {
@@ -80,9 +91,73 @@ export class DemoController implements UIRequestController {
   /**
    * Return the between two version
    */
-  diff(param: DiffParams): Promise<DeprecatedItem[]> {
-    TypedocJSONGenerator.generate(param.packageName)
-    return dieMessage("no impl");
+  async diff(param: DiffParams): Promise<DeprecatedItem[]> {
+    const { packageName } = param;
+    let loader = this.loaderCache.get(packageName);
+    if (!loader) {
+      await TypedocJSONGenerator.generate(param.packageName);
+      loader = new TypeDocJSONLoader(packageName);
+      console.log(loader.apis);
+      this.loaderCache.set(packageName, loader);
+    }
+    const fromVersion = Version.stringify(param.from);
+    const toVersion = Version.stringify(param.to);
+    const affectedApis = loader.apis.filter((api) => {
+      const { sinceVersion, deprecatedVersion } = api;
+      let isAvaliable = true,
+        isDeprecatedDueToUpgrade = false;
+      if (sinceVersion) {
+        isAvaliable = semver.lte(Version.normalize(sinceVersion), fromVersion);
+      }
+      if (deprecatedVersion) {
+        isDeprecatedDueToUpgrade = semver.lte(
+          Version.normalize(deprecatedVersion),
+          toVersion
+        );
+      }
+      return isAvaliable && isDeprecatedDueToUpgrade;
+    });
+    return Promise.all(
+      affectedApis.map(async (api) => {
+        const { dtsSource, name, deprecatedVersion, deprecationDetailed } = api;
+        const references: TypedocSource[] = [];
+        if (dtsSource) {
+          const dtsFilePath = normalizePath(path.resolve(ProjectLoader.instance.loadedProjectRoot!,'node_modules', dtsSource.fileName));
+          if (api.name.includes("bind(Method)")) {
+            debugger
+          }
+          try {
+            const tsserverResult = await ProjectLoader.instance.server.execute(
+              "references",
+              {
+                file: dtsFilePath,
+                line: dtsSource.line,
+                offset: dtsSource.character,
+                projectFileName: ProjectLoader.instance.loadedProjectName,
+              }
+            );
+            references.push(
+              ...(tsserverResult.body?.refs?.map((ref) => {
+                return {
+                  fileName: ref.file,
+                  line: ref.start.line,
+                  character: ref.start.offset,
+                };
+              }) ?? [])
+            );
+          } catch (error) {
+            // console.error(error)
+            console.error(dtsFilePath)
+          }
+        }
+        return {
+          name,
+          deprecatedVersion,
+          detail: deprecationDetailed,
+          references,
+        };
+      })
+    );
   }
   /**
    * Find the position that needed to be changed.

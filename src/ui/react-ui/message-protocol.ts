@@ -19,8 +19,9 @@ export interface TypedocSource {
 
 export interface DeprecatedItem {
   name: string;
-  accessPath: string[];
-  useInstead?: any;
+  deprecatedVersion?: string;
+  detail?: string;
+  references: TypedocSource[]
 }
 
 export interface DiffParams {

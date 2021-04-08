@@ -50,6 +50,12 @@ export const App: React.FC = () => {
                     from: range[0],
                     to: range[1],
                     packageName: selectedPackage,
+                  }).then(result => {
+                    const useful =  result.filter(item => !!item.references.length);
+                    console.log(useful);
+                    
+                  }).catch(e => {
+                    console.log(e)
                   });
               }}
             ></VersionRangeInput>

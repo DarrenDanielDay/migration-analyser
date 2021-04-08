@@ -16,7 +16,7 @@ export function scriptGeneTypeDocJson(packageName: string) {
   return new Promise<ProjectReflection>((resolve, reject) => {
     child.stdout.on("data", (c: Buffer) => {
       const info = c.toString("utf-8");
-      console.log(info);
+      fs.writeFileSync(path.resolve(extensionBase, 'typedoc-out.txt'), info, {flag:"a"})
       if (info.includes(generateDoneMessage)) {
         const json = fs
           .readFileSync(
@@ -31,6 +31,10 @@ export function scriptGeneTypeDocJson(packageName: string) {
           .toString("utf-8");
         resolve(JSON.parse(json) as ProjectReflection);
       }
+    });
+    child.on("close", (code, signal) => {
+      fs.writeFileSync(path.resolve(extensionBase, 'typedoc-out.txt'), `${"!".repeat(100)} closed code ${code} ${signal}`, {flag:"a"})
+
     });
   });
 }
