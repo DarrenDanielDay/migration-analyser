@@ -9,6 +9,7 @@ export interface IVersion {
   readonly major: number;
   readonly minor: number;
   readonly patch: number;
+  readonly preview?: string;
 }
 export interface TypedocSource {
   fileName: string;
@@ -20,6 +21,12 @@ export interface DeprecatedItem {
   name: string;
   accessPath: string[];
   useInstead?: any;
+}
+
+export interface DiffParams {
+  packageName: string;
+  from: IVersion;
+  to:IVersion;
 }
 
 export type CorrectItem = TypedocSource
@@ -41,7 +48,7 @@ export interface UIRequestExtensionProtocol {
   /**
    * Return the between two version
    */
-  diff: Protocol<[IVersion, IVersion], DeprecatedItem[]>;
+  diff: Protocol<DiffParams, DeprecatedItem[]>;
   /**
    * Find the position that needed to be changed.
    */

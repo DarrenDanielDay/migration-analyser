@@ -1,11 +1,11 @@
 import { readFileSync } from "fs";
 import { join, resolve } from "path";
 import * as typedoc from "typedoc";
-import { projectBase, projectCacheDir } from "../../utils/paths";
+import { extensionBase, extensionCacheDir } from "../../utils/paths";
 
 export async function geneTypeDoc(packageName: string) {
   const typeDeclPath = resolve(
-    projectBase,
+    extensionBase,
     "node_modules",
     "@types",
     packageName
@@ -17,7 +17,7 @@ export async function geneTypeDoc(packageName: string) {
   app.bootstrap({
     entryPoints,
   });
-  const outDir = join(projectCacheDir, packageName);
+  const outDir = join(extensionCacheDir, packageName);
   const jsonFileName = `${packageName}.json`;
   const jsonFilePath = join(outDir, jsonFileName);
   const project = app.convert();

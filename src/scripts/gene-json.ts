@@ -1,4 +1,4 @@
-import { geneTypeDoc } from "../core/typedoc";
+import { geneTypeDoc } from "../core/typedoc/doc-json";
 import * as fs from "fs";
 import * as path from "path";
 import { generateDoneMessage } from "../utils/constants";

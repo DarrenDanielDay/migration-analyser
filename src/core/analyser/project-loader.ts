@@ -8,14 +8,17 @@ import { MyTypeScriptServer } from "../server/node";
 export class ProjectLoader {
   private static _instance?: ProjectLoader;
   static get instance() {
-    return this._instance ?? new ProjectLoader();
+    return this._instance ??= new ProjectLoader();
   }
   dispose() {
     this.server.stop();
   }
   server = new MyTypeScriptServer().start();
+  loaded = false;
+  loadedProjectRoot?: string;
   loadedProjectName?: string;
   load(projectFolder: string) {
+    if (this.loaded) return;
     const tsconfigPath = path.resolve(projectFolder, "tsconfig.json");
     return new Promise<void>(async (resolve, reject) => {
       if (!fs.existsSync(tsconfigPath)) {
@@ -37,6 +40,8 @@ export class ProjectLoader {
                 loadEndHandler
               );
               this.loadedProjectName = tsconfigPath;
+              this.loadedProjectRoot = projectFolder;
+              this.loaded = true;
               resolve();
             }
           };

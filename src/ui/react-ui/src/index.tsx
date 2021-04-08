@@ -10,8 +10,10 @@ window.extensionAPI = new Proxy(
   {},
   {
     get(_target, key: ProtocalCommand, _receiver) {
-      return (params: any) => {
-        return MessageManager.instance.request(key, params);
+      return async (params: any) => {
+        const result = await MessageManager.instance.request(key, params);
+        console.log(`execute ${key}`, result);
+        return result;
       };
     },
   }

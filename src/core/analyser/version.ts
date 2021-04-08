@@ -1,9 +1,12 @@
+import { SemVer } from "semver";
+
 export type VersionSpec = string;
 
 export interface IVersion {
   readonly major: number;
   readonly minor: number;
   readonly patch: number;
+  readonly preview?: string;
 }
 
 export interface IVersionComparator {
@@ -16,10 +19,12 @@ export class Version implements IVersion, IVersionComparator {
   private _major: number;
   private _minor: number;
   private _patch: number;
-  constructor(major: number = 0, minor: number = 0, patch: number = 0) {
+  private _preview?: string;
+  constructor(major: number = 0, minor: number = 0, patch: number = 0, preview?: string) {
     this._major = ~~major;
     this._minor = ~~minor;
     this._patch = ~~patch;
+    this._preview = preview;
   }
 
   static versionTuple(version: IVersion) {
@@ -27,12 +32,8 @@ export class Version implements IVersion, IVersionComparator {
   }
 
   static parse(versionString: string) {
-    const versions: number[] = versionString
-      .split(/\D+/)
-      .filter((s) => !!s)
-      .map((num) => +num);
-    if (!versions.length) versions.push(0);
-    return new Version(...versions);
+    const ver = new SemVer(versionString, {includePrerelease: true});
+    return new Version(ver.major, ver.minor, ver.patch, ver.prerelease.join("."));
   }
 
   lt(version: IVersion): boolean {
@@ -70,5 +71,17 @@ export class Version implements IVersion, IVersionComparator {
   }
   get patch(): number {
     return this._patch;
+  }
+  get preview(): string | undefined {
+    return this._preview;
+  }
+
+  toJSON(): IVersion {
+    return {
+      major: this.major,
+      minor: this.minor,
+      patch: this.patch,
+      preview: this.preview,
+    }
   }
 }

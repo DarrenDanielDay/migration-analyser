@@ -1,6 +1,6 @@
 import { isString } from "lodash";
 import { assertIsNumber } from "../../utils";
-import { fs, path, projectCacheDir } from "../../utils/paths";
+import { fs, path, extensionCacheDir } from "../../utils/paths";
 import { isNullish, isPrimitive } from "../../utils/type-guards";
 
 export interface TypedocSource {
@@ -27,7 +27,7 @@ export class TypeDocJSONLoader {
       fs
         .readFileSync(
           path.resolve(
-            projectCacheDir,
+            extensionCacheDir,
             this.packageName,
             `${this.packageName}.json`
           )

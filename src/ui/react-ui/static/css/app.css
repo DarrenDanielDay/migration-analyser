@@ -1,3 +1,12 @@
 .extension-title {
   color: red;
 }
+.package-display {
+  cursor: pointer;
+  color: black;
+  background-color: whitesmoke;
+  border: 2px solid;
+}
+.package-display:hover {
+  background-color: wheat;
+}

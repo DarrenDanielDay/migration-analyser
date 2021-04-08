@@ -1,6 +1,6 @@
 import { writeFileSync } from "fs";
 import * as path from "path";
-import { projectBase } from "./paths";
+import { extensionBase } from "./paths";
 class Logger {
   totalSwitch: boolean = true;
   console = {
@@ -8,7 +8,7 @@ class Logger {
   };
   file = {
     on: true,
-    fileName: path.resolve(projectBase, "log.txt"),
+    fileName: path.resolve(extensionBase, "log.txt"),
   };
   write(message: string) {
     const { on, fileName } = this.file;

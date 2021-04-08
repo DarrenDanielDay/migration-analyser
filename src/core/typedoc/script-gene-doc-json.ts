@@ -2,15 +2,15 @@ import * as child_process from "child_process";
 import * as path from "path";
 import * as fs from "fs";
 import { generateDoneMessage } from "../../utils/constants";
-import { projectBase } from "../../utils/paths";
+import { extensionBase } from "../../utils/paths";
 import { ProjectReflection } from "typedoc";
 
 export function scriptGeneTypeDocJson(packageName: string) {
   const child = child_process.spawn(
-    path.resolve(projectBase, "src", "scripts", "gene-json.cmd "),
+    path.resolve(extensionBase, "src", "scripts", "gene-json.cmd "),
     [packageName],
     {
-      cwd: projectBase,
+      cwd: extensionBase,
     }
   );
   return new Promise<ProjectReflection>((resolve, reject) => {
@@ -21,7 +21,7 @@ export function scriptGeneTypeDocJson(packageName: string) {
         const json = fs
           .readFileSync(
             path.resolve(
-              projectBase,
+              extensionBase,
               "out",
               "cache",
               packageName,

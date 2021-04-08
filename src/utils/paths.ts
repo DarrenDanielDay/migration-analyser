@@ -15,4 +15,4 @@ function normalizeDrive(path: string) {
   return /^\w:/.test(path) ? title(path) : path;
 }
 export { path, fs };
-export { projectBase, projectCacheDir };
+export { projectBase as extensionBase, projectCacheDir as extensionCacheDir };
