@@ -54,7 +54,8 @@ export class TSServerStdoutReader {
         break;
       case ReaderState.ExpectingData:
         if (this.contentLength !== line.length) {
-          throw new Error("Unexpected length of payload");
+          // throw new Error("Unexpected length of payload");
+          console.warn("Length of payload not match");
         }
         const data = JSON.parse(line) as protocol.Message;
         switch (data.type) {

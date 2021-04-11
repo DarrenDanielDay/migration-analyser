@@ -18,8 +18,9 @@ export class PackageDetector {
   }
 
   private getPackageJson(): PackageJSON {
+    const packageJsonPath = path.resolve(this.rootDir, "package.json");
     const result = fs
-      .readFileSync(path.resolve(this.rootDir, "package.json"))
+      .readFileSync(packageJsonPath)
       .toString("utf-8");
     const json = JSON.parse(result);
     return {

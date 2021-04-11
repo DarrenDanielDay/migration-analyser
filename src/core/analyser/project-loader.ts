@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 
 import protocol = require("typescript/lib/protocol");
 import { MyTypeScriptServer } from "../server/node";
+import { executeCommand } from "../../utils/command";
 
 export class ProjectLoader {
   private static _instance?: ProjectLoader;
@@ -22,7 +23,8 @@ export class ProjectLoader {
     const tsconfigPath = path.resolve(projectFolder, "tsconfig.json");
     return new Promise<void>(async (resolve, reject) => {
       if (!fs.existsSync(tsconfigPath)) {
-        return reject(new Error("No tsconfig.json found in project."));
+        // return reject(new Error("No tsconfig.json found in project."));
+        await executeCommand('tsc --init --allowJS', projectFolder);
       }
       await this.server.execute("open", {
         file: tsconfigPath,

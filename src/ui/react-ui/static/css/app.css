@@ -1,6 +1,12 @@
 .extension-title {
   color: red;
 }
+.packages {
+  margin: 10px;
+}
+.version-range {
+  margin: 10px;
+}
 .package-display {
   cursor: pointer;
   color: black;
@@ -9,4 +15,11 @@
 }
 .package-display:hover {
   background-color: wheat;
+}
+.lines {
+  border: 1px solid wheat;
+}
+.result {
+  width: 90%;
+  margin: 10px;
 }

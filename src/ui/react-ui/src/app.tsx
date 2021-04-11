@@ -1,10 +1,12 @@
-import { IVersion } from "../message-protocol";
+import { DeprecatedItem, IVersion } from "../message-protocol";
 
 export const App: React.FC = () => {
   const [loaded, setLoaded] = useState(false);
   const [packages, setPackages] = useState<string[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [versions, setVersions] = useState<IVersion[]>([]);
+  const [derpecations, setDepreCations] = useState<DeprecatedItem[]>([]);
+  const [analysing, setAnalysing] = useState(false);
   useEffect(() => {
     extensionAPI.loadProject(undefined).then((loaded) => {
       setLoaded(loaded);
@@ -45,21 +47,43 @@ export const App: React.FC = () => {
               initVersion={versions[0]!}
               versions={versions}
               onConfirm={(range) => {
+                selectedPackage && setAnalysing(true);
                 selectedPackage &&
-                  window.extensionAPI.diff({
-                    from: range[0],
-                    to: range[1],
-                    packageName: selectedPackage,
-                  }).then(result => {
-                    const useful =  result.filter(item => !!item.references.length);
-                    console.log(useful);
-                    
-                  }).catch(e => {
-                    console.log(e)
-                  });
+                  window.extensionAPI
+                    .diff({
+                      from: range[0],
+                      to: range[1],
+                      packageName: selectedPackage,
+                    })
+                    .then((result) => {
+                      setAnalysing(false);
+                      setDepreCations(result);
+                    })
+                    .catch((e) => {
+                      console.log(e);
+                    });
               }}
             ></VersionRangeInput>
           )}
+          {analysing && <span>analysing...</span>}
+          <div className="result">
+            {!!derpecations.length &&
+              derpecations.map((item, index) => (
+                <ul key={index}>
+                  <code>{item.name}</code>
+                  <br />
+                  <p>{item.detail}</p>
+                  <p>Affected sources:</p>
+                  {item.references.map((ref, i) => (
+                    <li className="lines" key={i}>
+                      {ref.fileName}:{ref.line}:{ref.character}
+                    </li>
+                  ))}
+                  <div className="divider"></div>
+                </ul>
+              ))}
+              {!derpecations.length && !analysing && loaded && <div>No result</div>}
+          </div>
         </div>
       )}
     </>
@@ -76,7 +100,8 @@ const PackageDisplay: React.FC<IPackageDisplayProp> = ({
   onSelect,
 }) => {
   return (
-    <div>
+    <div className='packages'>
+      <div>Packages detected:</div>
       {packages.map((pkg, i) => (
         <div
           className="package-display"
@@ -146,8 +171,8 @@ const VersionInput: React.FC<IVersionInputProp> = ({
         }}
         value={versionString(version)}
       >
-        {versions.map((version, i) => (
-          <option key={i}>{versionString(version)}</option>
+        {versions.map((ver, i) => (
+          <option key={i}>{versionString(ver)}</option>
         ))}
       </select>
     </div>
@@ -175,8 +200,11 @@ const VersionRangeInput: React.FC<IVersionRangeInputProp> = ({
     if (!end) return;
     setAllowedVersion(versions.slice(0, end));
   }, [versions, fromVersion]);
+  useEffect(() => {
+    setToVersion(allowedVersion[allowedVersion.length - 1]!);
+  }, [allowedVersion]);
   return (
-    <div>
+    <div className="version-range">
       <label>From</label>
       <VersionInput
         versions={versions}

@@ -117,15 +117,12 @@ export class DemoController implements UIRequestController {
       }
       return isAvaliable && isDeprecatedDueToUpgrade;
     });
-    return Promise.all(
-      affectedApis.map(async (api) => {
-        const { dtsSource, name, deprecatedVersion, deprecationDetailed } = api;
+    const results: DeprecatedItem[] = []
+    for (const api of affectedApis) {
+      const { dtsSource, name, deprecatedVersion, deprecationDetailed } = api;
         const references: TypedocSource[] = [];
         if (dtsSource) {
           const dtsFilePath = normalizePath(path.resolve(ProjectLoader.instance.loadedProjectRoot!,'node_modules', dtsSource.fileName));
-          if (api.name.includes("bind(Method)")) {
-            debugger
-          }
           try {
             const tsserverResult = await ProjectLoader.instance.server.execute(
               "references",
@@ -143,21 +140,23 @@ export class DemoController implements UIRequestController {
                   line: ref.start.line,
                   character: ref.start.offset,
                 };
-              }) ?? [])
+              }) ?? []).filter(position => !position.fileName.includes("node_modules"))
             );
           } catch (error) {
             // console.error(error)
             console.error(dtsFilePath)
           }
         }
-        return {
-          name,
-          deprecatedVersion,
-          detail: deprecationDetailed,
-          references,
-        };
-      })
-    );
+        if (references.length) {
+          results.push({
+            name,
+            deprecatedVersion,
+            detail: deprecationDetailed,
+            references,
+          });
+        }
+    }
+    return results;
   }
   /**
    * Find the position that needed to be changed.

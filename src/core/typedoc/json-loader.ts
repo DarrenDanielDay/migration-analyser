@@ -125,7 +125,10 @@ export class TypeDocJSONLoader {
     return node?.sources;
   }
 
-  private getVersionFromTag(node: DeclarationReflection, tagName: string): [string| undefined, string | undefined] {
+  private getVersionFromTag(
+    node: DeclarationReflection,
+    tagName: string
+  ): [string | undefined, string | undefined] {
     for (const signature of node.signatures || []) {
       for (const tag of signature.comment?.tags || []) {
         // @ts-expect-error
@@ -137,18 +140,21 @@ export class TypeDocJSONLoader {
           while ((match = reg.exec(text)) !== null) {
             versionLikes.push(match[0]);
           }
-          return [versionLikes[0], text]
+          return [versionLikes[0], text];
         }
       }
     }
-    return [undefined, undefined]
+    return [undefined, undefined];
   }
 
   private makeFunctionAPI(
     path: string[],
     node: DeclarationReflection
   ): FunctionAPI {
-    const [deprecated, deprecatedFull] = this.getVersionFromTag(node, "deprecated");
+    const [deprecated, deprecatedFull] = this.getVersionFromTag(
+      node,
+      "deprecated"
+    );
     const [since] = this.getVersionFromTag(node, "since");
 
     const relativeSource = this.getSource(path)?.find(() => true)!;
@@ -156,11 +162,7 @@ export class TypeDocJSONLoader {
       name: this.getNameOf(path),
       accessPath: path,
       // @ts-ignore
-      dtsSource:
-        SourceLocator.locate(
-          relativeSource,
-          node.name
-        ),
+      dtsSource: SourceLocator.locate(relativeSource, node.name),
       deprecatedVersion: deprecated,
       deprecationDetailed: deprecatedFull,
       sinceVersion: since,
@@ -188,26 +190,70 @@ class SourceLocator {
   static locate(startPosition: TypedocSource, symbol: string) {
     // TODO use ast to find symbol
     const fileContent = fs
-      .readFileSync(path.resolve(extensionBase, 'node_modules', startPosition.fileName))
+      .readFileSync(
+        path.resolve(extensionBase, "node_modules", startPosition.fileName)
+      )
       .toString("utf-8");
-    const space = `\\s*`;
-    const skip = `.*`
-    const multilineStart = '/\\*'
-    const multilineEnd = '\\*/';
-    const singlelineStart = '//';
-    // const pattern = new RegExp(`${symbol}${space}\\??${space}\\(`, 'g');
-    const pattern = new RegExp(`(?<!(${space}${multilineStart}${skip})|(${space}${singlelineStart}${space}))${symbol}\\??\\((?!${skip}${multilineEnd}${space})`, 'g');
-    const results = [];
-    let result;
+
+    let index = 0;
     const offset = this.findIndex(fileContent, startPosition);
     const searchText = fileContent.slice(offset);
-    while ((result = pattern.exec(searchText)) != null) {
-      results.push(result);
+    function skipSpace() {
+      while (searchText[index] === " " || searchText[index] === "\t") {
+        index++;
+      }
     }
-    const matched = results[0];
+    function skipSingleLineComment() {
+      if (searchText[index] === "/") {
+        if (searchText[index + 1] === "/") {
+          index++;
+          index++;
+          let last: string, current: string;
+          for (; ; index++) {
+            last = searchText[index - 1];
+            current = searchText[index];
+            if (!last || !current || (last !== "\\" && current === "\n")) {
+              break;
+            }
+          }
+        }
+      }
+    }
+    function skipMultilineComment() {
+      if (searchText[index] === "/") {
+        if (searchText[index + 1] === "*") {
+          let last: string, current: string;
+          for (; ; index++) {
+            last = searchText[index - 1];
+            current = searchText[index];
+            if (!last || !current || (last === "*" && current === "/")) {
+              break;
+            }
+          }
+        }
+      }
+    }
+    function skipWords() {
+      while (/\w/.test(searchText[index])) {
+        index++;
+      }
+    }
+    for (;index < searchText.length;index++) {
+      skipSpace();
+      skipSingleLineComment();
+      skipMultilineComment();
+      const current = searchText[index];
+      if (current === symbol[0]) {
+        if (searchText.slice(index, index + symbol.length) === symbol) {
+          break;
+        } else {
+          skipWords();
+        }
+      }
+    }
     return this.findLocation(
       fileContent,
-      offset + matched?.index + 1,
+      offset + index + 1,
       startPosition.fileName
     );
   }
