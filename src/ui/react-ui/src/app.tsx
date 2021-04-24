@@ -1,12 +1,13 @@
-import { DeprecatedItem, IVersion } from "../message-protocol";
+import { AnalysedAPI, DeprecatedItem, IVersion } from "../message-protocol";
 
 export const App: React.FC = () => {
   const [loaded, setLoaded] = useState(false);
   const [packages, setPackages] = useState<string[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [versions, setVersions] = useState<IVersion[]>([]);
-  const [derpecations, setDepreCations] = useState<DeprecatedItem[]>([]);
+  const [derpecations, setDeprecations] = useState<DeprecatedItem[]>([]);
   const [analysing, setAnalysing] = useState(false);
+  const [analysis, setAnalysis] = useState<AnalysedAPI[]>([]);
   useEffect(() => {
     extensionAPI.loadProject(undefined).then((loaded) => {
       setLoaded(loaded);
@@ -42,47 +43,60 @@ export const App: React.FC = () => {
               onSelect={(pkg) => setSelectedPackage(pkg)}
             ></PackageDisplay>
           }
-          {loaded && selectedPackage && versions.length && (
-            <VersionRangeInput
-              initVersion={versions[0]!}
-              versions={versions}
-              onConfirm={(range) => {
-                selectedPackage && setAnalysing(true);
-                selectedPackage &&
-                  window.extensionAPI
-                    .diff({
-                      from: range[0],
-                      to: range[1],
-                      packageName: selectedPackage,
-                    })
-                    .then((result) => {
-                      setAnalysing(false);
-                      setDepreCations(result);
-                    })
-                    .catch((e) => {
-                      console.log(e);
-                    });
-              }}
-            ></VersionRangeInput>
-          )}
+          <div>
+            {loaded && selectedPackage && versions.length && (
+              <VersionRangeInput
+                initVersion={versions[0]!}
+                versions={versions}
+                onConfirm={(range) => {
+                  selectedPackage && setAnalysing(true);
+                  selectedPackage &&
+                    window.extensionAPI
+                      .analyse({
+                        from: range[0],
+                        to: range[1],
+                        packageName: selectedPackage,
+                      })
+                      .then((result) => {
+                        setAnalysing(false);
+                        setAnalysis(
+                          result.filter(
+                            (analysed) => analysed.references.length > 0
+                          )
+                        );
+                        setDeprecations(
+                          result.filter(
+                            (analysed) =>
+                              analysed.isDeprecated &&
+                              analysed.references.length > 0
+                          )
+                        );
+                      })
+                      .catch((e) => {
+                        console.log(e);
+                      });
+                }}
+              ></VersionRangeInput>
+            )}
+            {!!analysis.length && (
+              <div>
+                Detected this project has used {analysis.length} APIs of{" "}
+                {selectedPackage}.<br />
+                {derpecations.length} (
+                {(derpecations.length / analysis.length) * 100}%) of them are
+                deprecated.
+              </div>
+            )}
+          </div>
           {analysing && <span>analysing...</span>}
           <div className="result">
             {!!derpecations.length &&
               derpecations.map((item, index) => (
-                <ul key={index}>
-                  <code>{item.name}</code>
-                  <br />
-                  <p>{item.detail}</p>
-                  <p>Affected sources:</p>
-                  {item.references.map((ref, i) => (
-                    <li className="lines" key={i}>
-                      {ref.fileName}:{ref.line}:{ref.character}
-                    </li>
-                  ))}
-                  <div className="divider"></div>
-                </ul>
+                <AnalyseResultItem index={index} item={item} />
               ))}
-              {!derpecations.length && !analysing && loaded && <div>No result</div>}
+            {!derpecations.length && !analysing && loaded && (
+              <div>No result</div>
+            )}
           </div>
         </div>
       )}
@@ -100,7 +114,7 @@ const PackageDisplay: React.FC<IPackageDisplayProp> = ({
   onSelect,
 }) => {
   return (
-    <div className='packages'>
+    <div className="packages">
       <div>Packages detected:</div>
       {packages.map((pkg, i) => (
         <div
@@ -224,6 +238,38 @@ const VersionRangeInput: React.FC<IVersionRangeInputProp> = ({
       >
         See Changes
       </button>
+    </div>
+  );
+};
+
+export const AnalyseResultItem: React.FC<{
+  index: number;
+  item: DeprecatedItem;
+}> = ({ index, item }) => {
+  const [opened, setOpened] = useState(false);
+  return (
+    <div key={index}>
+      <p
+        onClick={() => {
+          setOpened(!opened);
+        }}
+        style={{ cursor: "pointer" }}
+      >
+        <span style={{margin: 5}}>{index + 1}.</span>
+        <code>{item.name}</code>
+      </p>
+      <ul style={{ display: opened ? "block" : "none" }}>
+        <p>{item.detail}</p>
+        <p>Affected sources:</p>
+        <div>
+          {item.references.map((ref, i) => (
+            <li className="lines" key={i}>
+              {ref.fileName}:{ref.line}:{ref.character}
+            </li>
+          ))}
+        </div>
+        <div className="divider"></div>
+      </ul>
     </div>
   );
 };

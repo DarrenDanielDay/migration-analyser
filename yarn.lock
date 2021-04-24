@@ -84,6 +84,20 @@
     "@types/minimatch" "*"
     "@types/node" "*"
 
+"@types/grunt@^0.4.25":
+  version "0.4.25"
+  resolved "https://registry.npm.taobao.org/@types/grunt/download/@types/grunt-0.4.25.tgz#839ad9e51d663a7fa3f10bef3648021746f80731"
+  integrity sha1-g5rZ5R1mOn+j8QvvNkgCF0b4BzE=
+  dependencies:
+    "@types/node" "*"
+
+"@types/gzip-js@^0.3.2":
+  version "0.3.2"
+  resolved "https://registry.npm.taobao.org/@types/gzip-js/download/@types/gzip-js-0.3.2.tgz#eb0a45f7813dd4b2da2ed1f70e84fd204ee36a12"
+  integrity sha1-6wpF94E91LLaLtH3DoT9IE7jahI=
+  dependencies:
+    "@types/node" "*"
+
 "@types/jquery@^3.5.5":
   version "3.5.5"
   resolved "https://registry.npm.taobao.org/@types/jquery/download/@types/jquery-3.5.5.tgz?cache=0&sync_timestamp=1613379078625&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40types%2Fjquery%2Fdownload%2F%40types%2Fjquery-3.5.5.tgz#2c63f47c9c8d96693d272f5453602afd8338c903"

@@ -84,7 +84,6 @@ export class TypeDocJSONLoader {
   }
 
   loadFunctionAPIs() {
-    const functionAPIPaths = [];
     const functionTypes = ["Method"];
     const iterator = this.dfs([], this.json);
     let iteration = iterator.next(true);
@@ -97,7 +96,6 @@ export class TypeDocJSONLoader {
             functionTypes.includes(kindString) &&
             !this.getNameOf(path).includes("__type")
           ) {
-            functionAPIPaths.push(path);
             this.apis.push(this.makeFunctionAPI(path, node));
             iteration = iterator.next(false);
           } else {
@@ -108,9 +106,6 @@ export class TypeDocJSONLoader {
       }
       iteration = iterator.next(true);
     }
-    return functionAPIPaths.map((path) => {
-      return this.getNameOf(path);
-    });
   }
 
   private getSource(path: string[]): TypedocSource[] | undefined {

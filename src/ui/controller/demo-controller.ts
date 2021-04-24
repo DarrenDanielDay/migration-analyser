@@ -1,4 +1,5 @@
 import {
+  AnalysedAPI,
   DeprecatedItem,
   DiffParams,
   UIRequestController,
@@ -163,5 +164,72 @@ export class DemoController implements UIRequestController {
    */
   correct(): Promise<[]> {
     return dieMessage("no impl");
+  }
+
+  async analyse(param: DiffParams): Promise<AnalysedAPI[]> {
+    const { packageName } = param;
+    let loader = this.loaderCache.get(packageName);
+    if (!loader) {
+      await TypedocJSONGenerator.generate(param.packageName);
+      loader = new TypeDocJSONLoader(packageName);
+      console.log(loader.apis);
+      this.loaderCache.set(packageName, loader);
+    }
+    const fromVersion = Version.stringify(param.from);
+    const toVersion = Version.stringify(param.to);
+    const affectedApis = [...loader.apis]
+    const results: AnalysedAPI[] = []
+    for (const api of affectedApis) {
+      const { sinceVersion, deprecatedVersion } = api;
+      let isAvaliable = true,
+        isDeprecatedDueToUpgrade = false;
+      if (sinceVersion) {
+        isAvaliable = semver.lte(Version.normalize(sinceVersion), fromVersion);
+      }
+      if (deprecatedVersion) {
+        isDeprecatedDueToUpgrade = semver.lte(
+          Version.normalize(deprecatedVersion),
+          toVersion
+        );
+      }
+      const { dtsSource, name, deprecationDetailed } = api;
+        const references: TypedocSource[] = [];
+        if (dtsSource) {
+          const dtsFilePath = normalizePath(path.resolve(ProjectLoader.instance.loadedProjectRoot!,'node_modules', dtsSource.fileName));
+          try {
+            const tsserverResult = await ProjectLoader.instance.server.execute(
+              "references",
+              {
+                file: dtsFilePath,
+                line: dtsSource.line,
+                offset: dtsSource.character,
+                projectFileName: ProjectLoader.instance.loadedProjectName,
+              }
+            );
+            references.push(
+              ...(tsserverResult.body?.refs?.map((ref) => {
+                return {
+                  fileName: ref.file,
+                  line: ref.start.line,
+                  character: ref.start.offset,
+                };
+              }) ?? []).filter(position => !position.fileName.includes("node_modules"))
+            );
+          } catch (error) {
+            // console.error(error)
+            console.error(dtsFilePath)
+          }
+        }
+        if (references.length) {
+          results.push({
+            name,
+            deprecatedVersion,
+            detail: deprecationDetailed,
+            references,
+            isDeprecated: isAvaliable && isDeprecatedDueToUpgrade
+          });
+        }
+    }
+    return results;
   }
 }

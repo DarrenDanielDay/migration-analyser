@@ -24,6 +24,10 @@ export interface DeprecatedItem {
   references: TypedocSource[]
 }
 
+export interface AnalysedAPI extends DeprecatedItem {
+  isDeprecated: boolean;
+}
+
 export interface DiffParams {
   packageName: string;
   from: IVersion;
@@ -54,6 +58,7 @@ export interface UIRequestExtensionProtocol {
    * Find the position that needed to be changed.
    */
   correct: Protocol<DeprecatedItem, CorrectItem[]>
+  analyse: Protocol<DiffParams, AnalysedAPI[]>
 }
 
 export type MessageType = "request" | "response";

@@ -11,8 +11,8 @@ import { notNullish } from "../../../utils/assertions";
 import { TSServerStdoutReader } from "./stdout-reader";
 import { logger } from "../../../utils/debugger";
 import { EventEmitter } from "events";
-const projectBase =
-  "C:\\Users\\DarrenDanielDay\\Documents\\School\\paper\\package-migration-analyzer-extension";
+import { extensionBase } from "../../../utils/paths";
+const projectBase = extensionBase;
 interface PendingRequestItem {
   resolve: (data: any) => void;
   reject: (reason?: any) => void;
